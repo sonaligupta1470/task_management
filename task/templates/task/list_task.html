@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% if tasks is not None %}
+<div class="table-responsive">
+    <table class="table table-stripped table-sm">
+     <thead>
+     <tr>
+         <th>TASK ID</th>
+         <th>NAME</th>
+         <th>STATUS</th>
+         <th>ASSIGNEE</th>
+         <th>CREATOR</th>
+     </tr>
+     </thead>
+        <tbody>
+        {% for each in tasks %}
+        <tr>
+        <td><a href="{% url 'task:detail' each.id %}">{{ each.id }}</a></td>
+            <td><a href="{% url 'task:detail' each.id %}">{{ each.task_name }}</a></td>
+            <td><a href="{% url 'task:detail' each.id %}">{{ each.status }}</a></td>
+            <td>{%for e in each.assigned_to.all %} {{e}} ,{% endfor %}</td>
+            <td>{{ each.task_creator }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+    {% endif %}
+<a class="btn btn-primary" href="/task/new" role="button">Add Task</a>
+{% include 'messages.html' %}
+{% endblock %}

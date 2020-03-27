@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<br>
+<form method="POST" action="/task/edit/{{ object.id }}/">
+    {% csrf_token %}
+<div class="table=responsive">
+    <table class="table table-stripped table-sm">
+        <tbody>
+        <tr>
+            <th>Task Name</th>
+            <td>
+                {% if object.editable %}
+                <input id="task_name" type="text" value="{{ object.task_name }}" onchange="enableSave()" onkeydown="enableSave()" onkeyup="enableSave()">
+                {% else %}
+                <input id="task_name" type="text" value="{{ object.task_name }}" disabled>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>
+                {% if object.editable %}
+                <input id="description" type="text" value="{{ object.description }}" onchange="enableSave()" onkeydown="enableSave()" onkeyup="enableSave()">
+                {% else %}
+                <input id="description" type="text" value="{{ object.description }}" disabled>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                {% if object.editable or object.status_editable %}
+                <select id="status" onchange="enableSave()" onkeydown="enableSave()" onkeyup="enableSave()">
+                    {% else %}
+                    <select id="status" disabled>
+                        {% endif %}
+                    {% for status in status_choices %}
+                    {% if status.0 == object.status %}
+                    <option value="{{ status.0 }}" selected>{{ status.1 }}</option>
+                    {% else %}
+                    <option value="{{ status.0 }}">{{ status.1 }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th>Creator</th>
+            <td><input type="text" id="creator" value="{{ object.task_creator }}" disabled></td>
+        </tr>
+        <tr>
+            <th>Assigned To</th>
+            <td>
+                {% if object.editable %}
+                <select id="assigned_to" name="assigned_to" multiple onchange="enableSave()" onkeydown="enableSave()" onkeyup="enableSave()">
+                    {% else %}
+                       <select id="assigned_to" name="assigned_to" multiple disabled>
+                        {% endif %}
+                    {% for user in users %}
+                    {% if user in object.assigned_to.all %}
+                    <option value="{{ user }}" selected>{{ user.username }}</option>
+                    {% else %}
+                    <option value="{{ user }}">{{ user.username }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+    <button id="save_changes" type="submit" class="btn btn-success" disabled>Save Changes</button>
+</form>
+<br>
+{% if comments %}
+<div class="table-responsive">
+    <table class="table table-stripped table-sm">
+     <thead>
+     <tr>
+         <th>COMMENT</th>
+         <th>BY</th>
+         <th>DATE</th>
+         <th>EDIT/DELETE</th>
+     </tr>
+     </thead>
+        <tbody>
+        {% for comment in comments %}
+        <tr>
+            <td>{{ comment.comment }}</td>
+            <td>{{ comment.creator }}</td>
+            <td>{{ comment.timestamp }}</td>
+            <td>{% if comment.editable %}<a href="/task/edit_comment/{{ object.id }}/{{ user.id }}/{{ comment.id }}">Edit</a>
+                <a href="/task/delete_comment/{{ object.id }}/{{ user.id }}/{{ comment.id }}">Delete</a> {% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% if not form %}
+<a class="btn btn-primary" href="/task/add_comment/{{ object.id }}/{{ user.id }}" role="button">Add Comment</a>
+{% endif %}
+{% if form %}
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Submit</button>
+</form>
+{% endif %}
+<script>
+    function enableSave(){
+    console.log("enableSave");
+        var task_name = $("#task_name").val();
+        var description = $("#description").val();
+        var status = $("#status").val();
+        var assigned_to = $("#assigned_to").val() || [];
+
+        var task_name_old = $("#task_name").prop("defaultValue");
+        var description_old = $("#description").prop("defaultValue");
+        var status_old = $("#status option:selected");
+        var assigned_to_old = [];
+        $.each($("#assigned_to option:selected"), function(){
+        assigned_to_old.push($(this).val());
+        });
+
+        flag = 1;
+        if ( task_name != task_name_old && task_name != "" ) { flag = 0; }
+        if ( description != description_old && description != "" ) { flag = 0; }
+        if ( status != status_old && status != "" ) { flag = 0; }
+        assigned_to.forEach(function(e){
+        if ( assigned_to_old.indexOf(e) == -1 ) flag = 0;
+
+        if (flag = 1){
+        $("#save_changes").removeAttr('disabled');
+        }
+        })
+    }
+</script>
+{% endblock %}
